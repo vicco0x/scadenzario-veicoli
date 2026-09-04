@@ -59,13 +59,19 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
 
 Per compatibilità, il codice accetta anche `VITE_SUPABASE_ANON_KEY`, ma i nuovi progetti dovrebbero usare `VITE_SUPABASE_PUBLISHABLE_KEY`.
 
-## Supabase CLI locale
+### Auth in produzione
 
-La cartella `supabase/` include `config.toml` e le migration. Dopo `npm install` puoi usare:
+In **Authentication → URL Configuration** imposta `Site URL` sull’URL pubblico dell’app e aggiungi gli eventuali URL di preview autorizzati. È importante soprattutto per conferma email e reset password.
+
+## Supabase CLI e test database
+
+La cartella `supabase/` include configurazione, migration e test pgTAP. Dopo `npm install` puoi usare:
 
 ```bash
 npm run supabase:start
 npm run supabase:reset
+npm run supabase:test
+npm run supabase:lint
 npm run supabase:types
 ```
 
@@ -94,6 +100,8 @@ npm run build
 npm run preview
 npm run supabase:start
 npm run supabase:reset
+npm run supabase:test
+npm run supabase:lint
 npm run supabase:push
 npm run supabase:types
 ```

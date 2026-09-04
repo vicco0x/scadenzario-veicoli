@@ -13,7 +13,9 @@
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",
     "supabase:types": "supabase gen types typescript --local > src/lib/database.types.ts",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "supabase:test": "supabase test db",
+    "supabase:lint": "supabase db lint --local --schema public --fail-on error"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",
