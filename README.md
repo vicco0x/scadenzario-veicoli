@@ -42,7 +42,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY=
 ## Collegare Supabase
 
 1. Crea un progetto Supabase.
-2. Applica `supabase/migrations/20260904_initial_schema.sql` dal SQL Editor oppure con la Supabase CLI.
+2. Collega il progetto con `npx supabase link --project-ref <PROJECT_REF>` e applica la migration con `npm run supabase:push` (in alternativa usa il SQL Editor).
 3. Dal **Connect dialog** del progetto copia Project URL e **publishable key**.
 4. Imposta:
 
@@ -58,6 +58,22 @@ VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
 `.env` è già ignorato da Git. La publishable key è destinata al client e lavora insieme alle policy RLS. Non inserire mai una Supabase secret key o una legacy `service_role` key nel frontend.
 
 Per compatibilità, il codice accetta anche `VITE_SUPABASE_ANON_KEY`, ma i nuovi progetti dovrebbero usare `VITE_SUPABASE_PUBLISHABLE_KEY`.
+
+## Supabase CLI locale
+
+La cartella `supabase/` include `config.toml` e le migration. Dopo `npm install` puoi usare:
+
+```bash
+npm run supabase:start
+npm run supabase:reset
+npm run supabase:types
+```
+
+Per applicare le migration a un progetto remoto già collegato:
+
+```bash
+npm run supabase:push
+```
 
 ## Database e sicurezza
 
@@ -76,6 +92,10 @@ npm run typecheck
 npm run lint
 npm run build
 npm run preview
+npm run supabase:start
+npm run supabase:reset
+npm run supabase:push
+npm run supabase:types
 ```
 
 ## Deployment

@@ -8,3 +8,5 @@ dist
 coverage
 .vscode/*
 !.vscode/extensions.json
+supabase/.temp
+supabase/.branches
