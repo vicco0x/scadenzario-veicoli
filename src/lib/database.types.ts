@@ -78,11 +78,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'vehicle_documents_vehicle_id_fkey'
-            columns: ['vehicle_id']
+            foreignKeyName: 'vehicle_documents_vehicle_owner_fkey'
+            columns: ['vehicle_id', 'user_id']
             isOneToOne: false
             referencedRelation: 'vehicles'
-            referencedColumns: ['id']
+            referencedColumns: ['id', 'user_id']
           },
         ]
       }

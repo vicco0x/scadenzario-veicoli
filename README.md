@@ -9,7 +9,7 @@ PWA responsive per gestire veicoli, bolli, assicurazioni, revisioni e altre scad
 - Archivio veicoli con ricerca
 - CRUD veicoli e documenti con validazione e conferme di cancellazione
 - Campi assicurazione dedicati
-- Migrazione automatica dei dati dal vecchio `localStorage` (`scadenzario-veicoli`)
+- Migrazione automatica, in modalità locale, dei dati dal vecchio `localStorage` (`scadenzario-veicoli`)
 - Modalità `local` senza backend
 - Modalità `supabase` con autenticazione email/password e sincronizzazione cloud
 - Row Level Security per isolamento dei dati tra utenti

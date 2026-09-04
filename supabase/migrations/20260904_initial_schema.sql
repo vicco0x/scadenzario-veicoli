@@ -18,13 +18,14 @@ create table if not exists public.vehicles (
   constraint vehicles_make_length check (char_length(make) <= 60),
   constraint vehicles_model_length check (char_length(model) <= 80),
   constraint vehicles_notes_length check (char_length(notes) <= 500),
-  unique (user_id, plate)
+  constraint vehicles_user_plate_key unique (user_id, plate),
+  constraint vehicles_id_user_key unique (id, user_id)
 );
 
 create table if not exists public.vehicle_documents (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
-  vehicle_id uuid not null references public.vehicles(id) on delete cascade,
+  vehicle_id uuid not null,
   type text not null check (type in ('Bollo', 'Assicurazione', 'Revisione', 'Altro')),
   expires_on date not null,
   insurer text not null default '',
@@ -34,12 +35,13 @@ create table if not exists public.vehicle_documents (
   updated_at timestamptz not null default now(),
   constraint vehicle_documents_insurer_length check (char_length(insurer) <= 100),
   constraint vehicle_documents_policy_number_length check (char_length(policy_number) <= 80),
-  constraint vehicle_documents_notes_length check (char_length(notes) <= 500)
+  constraint vehicle_documents_notes_length check (char_length(notes) <= 500),
+  constraint vehicle_documents_vehicle_owner_fkey foreign key (vehicle_id, user_id) references public.vehicles(id, user_id) on delete cascade
 );
 
 create index if not exists vehicles_user_id_idx on public.vehicles(user_id);
 create index if not exists vehicle_documents_user_id_idx on public.vehicle_documents(user_id);
-create index if not exists vehicle_documents_vehicle_id_idx on public.vehicle_documents(vehicle_id);
+create index if not exists vehicle_documents_vehicle_owner_idx on public.vehicle_documents(vehicle_id, user_id);
 create index if not exists vehicle_documents_user_expiry_idx on public.vehicle_documents(user_id, expires_on);
 create index if not exists vehicle_documents_vehicle_expiry_idx on public.vehicle_documents(vehicle_id, expires_on);
 
@@ -90,7 +92,7 @@ create policy "vehicles_delete_own" on public.vehicles
 for delete to authenticated
 using ((select auth.uid()) = user_id);
 
--- Documents: same ownership rule, with parent ownership enforced on insert/update.
+-- Documents: user ownership is enforced by RLS and the composite parent foreign key.
 drop policy if exists "vehicle_documents_select_own" on public.vehicle_documents;
 create policy "vehicle_documents_select_own" on public.vehicle_documents
 for select to authenticated
@@ -99,25 +101,13 @@ using ((select auth.uid()) = user_id);
 drop policy if exists "vehicle_documents_insert_own" on public.vehicle_documents;
 create policy "vehicle_documents_insert_own" on public.vehicle_documents
 for insert to authenticated
-with check (
-  (select auth.uid()) = user_id
-  and exists (
-    select 1 from public.vehicles v
-    where v.id = vehicle_id and v.user_id = (select auth.uid())
-  )
-);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "vehicle_documents_update_own" on public.vehicle_documents;
 create policy "vehicle_documents_update_own" on public.vehicle_documents
 for update to authenticated
 using ((select auth.uid()) = user_id)
-with check (
-  (select auth.uid()) = user_id
-  and exists (
-    select 1 from public.vehicles v
-    where v.id = vehicle_id and v.user_id = (select auth.uid())
-  )
-);
+with check ((select auth.uid()) = user_id);
 
 drop policy if exists "vehicle_documents_delete_own" on public.vehicle_documents;
 create policy "vehicle_documents_delete_own" on public.vehicle_documents
