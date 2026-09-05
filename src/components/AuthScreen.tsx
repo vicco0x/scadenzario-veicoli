@@ -2,6 +2,24 @@ import { useState, type FormEvent } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '../lib/database.types'
 
+function authErrorMessage(code: string | undefined): string {
+  switch (code) {
+    case 'invalid_credentials':
+      return 'Email o password non corretti.'
+    case 'email_address_invalid':
+      return 'Inserisci un indirizzo email valido.'
+    case 'user_already_exists':
+    case 'email_exists':
+      return 'Esiste già un account con questa email. Prova ad accedere.'
+    case 'weak_password':
+      return 'Scegli una password più sicura.'
+    case 'over_email_send_rate_limit':
+      return 'Troppe richieste in poco tempo. Attendi qualche minuto e riprova.'
+    default:
+      return 'Impossibile completare la richiesta. Riprova.'
+  }
+}
+
 export function AuthScreen({ client }: { client: SupabaseClient<Database> }) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
@@ -19,7 +37,7 @@ export function AuthScreen({ client }: { client: SupabaseClient<Database> }) {
         ? await client.auth.signInWithPassword({ email: normalizedEmail, password })
         : await client.auth.signUp({ email: normalizedEmail, password })
       if (result.error) {
-        setMessage(result.error.message)
+        setMessage(authErrorMessage(result.error.code))
         return
       }
       if (mode === 'signup' && !result.data.session) {
