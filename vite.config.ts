@@ -48,5 +48,14 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: false,
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'supabase', test: /node_modules\/(?:@supabase|@realtime-js)/ },
+          ],
+        },
+      },
+    },
   },
 })

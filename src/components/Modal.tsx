@@ -12,8 +12,11 @@ export function Modal({ title, children, onClose, closeDisabled = false }: {
   const dialogRef = useRef<HTMLElement>(null)
   const onCloseRef = useRef(onClose)
   const closeDisabledRef = useRef(closeDisabled)
-  onCloseRef.current = onClose
-  closeDisabledRef.current = closeDisabled
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+    closeDisabledRef.current = closeDisabled
+  }, [onClose, closeDisabled])
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
