@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { AuthScreen } from './components/AuthScreen'
+import { AuthScreen, PasswordRecoveryScreen } from './components/AuthScreen'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { DocumentForm } from './components/DocumentForm'
 import { StatusBadge } from './components/StatusBadge'
@@ -33,35 +33,75 @@ function ConfigError() {
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [authReady, setAuthReady] = useState(env.dataMode !== 'supabase')
+  const [authUnavailable, setAuthUnavailable] = useState(false)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     if (env.dataMode !== 'supabase' || !supabase) return
+    const client = supabase
     let mounted = true
-    void supabase.auth.getSession()
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 8_000)
+    void fetch(`${env.supabaseUrl}/auth/v1/settings`, {
+      headers: { apikey: env.supabasePublishableKey },
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Auth health check failed: ${response.status}`)
+        return client.auth.getSession()
+      })
       .then(({ data }) => {
-        if (mounted) setSession(data.session)
+        if (mounted) {
+          setSession(data.session)
+          setAuthUnavailable(false)
+        }
       })
       .catch(() => {
-        if (mounted) setSession(null)
+        if (mounted) {
+          setSession(null)
+          setAuthUnavailable(true)
+        }
       })
       .finally(() => {
         if (mounted) setAuthReady(true)
       })
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data } = client.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession)
+      setPasswordRecovery(event === 'PASSWORD_RECOVERY')
+      setAuthUnavailable(false)
       setAuthReady(true)
     })
     return () => {
       mounted = false
+      window.clearTimeout(timeout)
+      controller.abort()
       data.subscription.unsubscribe()
     }
-  }, [])
+  }, [retryKey])
 
   if (env.dataMode === 'supabase' && !hasSupabaseConfig) return <ConfigError />
   if (!authReady) return <div className="page-loader">Caricamento…</div>
+  if (authUnavailable) return <ServiceUnavailable onRetry={() => { setAuthReady(false); setRetryKey((value) => value + 1) }} />
+  if (env.dataMode === 'supabase' && supabase && passwordRecovery) return <PasswordRecoveryScreen client={supabase} />
   if (env.dataMode === 'supabase' && supabase && !session) return <AuthScreen client={supabase} />
 
   return <VehicleApp key={session?.user.id ?? 'local'} repository={createRepository()} sessionEmail={session?.user.email ?? null} />
+}
+
+function ServiceUnavailable({ onRetry }: { onRetry: () => void }) {
+  return (
+    <main className="auth-shell">
+      <section className="auth-card" role="alert">
+        <div className="brand brand--auth">
+          <div className="brand-mark">IT</div>
+          <div><h1>Servizio temporaneamente non disponibile</h1><p>Non riusciamo a raggiungere l’archivio online.</p></div>
+        </div>
+        <p className="muted-copy">I tuoi dati non sono stati modificati. Controlla la connessione e riprova tra poco.</p>
+        <button className="button button--primary button--wide" type="button" onClick={onRetry}>Riprova</button>
+      </section>
+    </main>
+  )
 }
 
 function VehicleApp({ repository, sessionEmail }: { repository: DataRepository; sessionEmail: string | null }) {
@@ -323,7 +363,7 @@ function VehicleApp({ repository, sessionEmail }: { repository: DataRepository; 
         </div>
       </main>
 
-      <footer className="footer"><span>{env.dataMode === 'supabase' ? 'Sincronizzazione Supabase attiva' : 'Archivio locale sul dispositivo'}</span><span>Scadenzario Veicoli</span></footer>
+      <footer className="footer"><span>{env.dataMode === 'supabase' ? 'Archivio online sincronizzato' : 'Archivio locale sul dispositivo'}</span><span>Scadenzario Veicoli</span></footer>
 
       {vehicleForm !== undefined && <VehicleForm vehicle={vehicleForm ?? undefined} onCancel={() => setVehicleForm(undefined)} onSubmit={saveVehicle} />}
       {documentForm && <DocumentForm document={documentForm.document} onCancel={() => setDocumentForm(null)} onSubmit={saveDocument} />}

@@ -52,7 +52,7 @@ VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
 ```
 
-5. In **Authentication → Providers → Email** abilita email/password. Se vuoi accesso immediato durante lo sviluppo, puoi disabilitare temporaneamente la conferma email.
+5. In **Authentication → Providers → Email** abilita email/password. Il progetto rifiuta password inferiori a 8 caratteri o prive di lettere e numeri.
 6. Riavvia il dev server.
 
 `.env` è già ignorato da Git. La publishable key è destinata al client e lavora insieme alle policy RLS. Non inserire mai una Supabase secret key o una legacy `service_role` key nel frontend.
@@ -61,7 +61,9 @@ Per compatibilità, il codice accetta anche `VITE_SUPABASE_ANON_KEY`, ma i nuovi
 
 ### Auth in produzione
 
-In **Authentication → URL Configuration** imposta `Site URL` sull’URL pubblico dell’app e aggiungi gli eventuali URL di preview autorizzati. È importante soprattutto per conferma email e reset password.
+In **Authentication → URL Configuration** imposta `Site URL` sull’URL pubblico dell’app e aggiungi gli eventuali URL di preview autorizzati. L’interfaccia include registrazione e recupero password.
+
+Per un uso in produzione configura un provider SMTP dedicato: il provider email predefinito di Supabase ha limiti ridotti ed è pensato principalmente per test. Solo dopo aver configurato SMTP abilita `auth.email.enable_confirmations`; le credenziali devono restare nei secret del progetto Supabase.
 
 ## Supabase CLI e test database
 

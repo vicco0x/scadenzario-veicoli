@@ -1,5 +1,30 @@
 project_id = "scadenzario-veicoli"
 
 [auth]
-site_url = "http://127.0.0.1:5173"
-additional_redirect_urls = ["http://localhost:5173", "http://127.0.0.1:5173"]
+site_url = "https://scadenzario-veicoli.vercel.app"
+additional_redirect_urls = [
+  "https://scadenzario-veicoli.vercel.app/**",
+  "https://*-vincenzos-projects-0f4d12d1.vercel.app/**",
+  "http://localhost:5173/**",
+  "http://127.0.0.1:5173/**",
+  "http://localhost:3000/**"
+]
+enable_signup = true
+enable_anonymous_sign_ins = false
+minimum_password_length = 8
+password_requirements = "letters_digits"
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+secure_password_change = true
+max_frequency = "60s"
+otp_length = 8
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[storage.vector]
+enabled = false
